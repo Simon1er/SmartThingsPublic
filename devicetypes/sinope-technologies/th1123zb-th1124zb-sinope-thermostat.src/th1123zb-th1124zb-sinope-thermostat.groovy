@@ -1,7 +1,7 @@
 /**
-Copyright Sinopé Technologies
-1.0.0
-SVN-431
+Copyright Sinope Technologies
+1.0.1
+SVN-435
  *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 **/
@@ -939,12 +939,16 @@ void refresh_misc() {
             }
 		}
 		
-        //To refresh the time
-        def mytimezone = location.getTimeZone()
-		long secFrom2000 = (((now().toBigInteger() + mytimezone.rawOffset + mytimezone.dstSavings ) / 1000) - (10957 * 24 * 3600)).toLong() //number of second from 2000-01-01 00:00:00h
+        
+      	def mytimezone = location.getTimeZone()
+        long dstSavings = 0
+        if(mytimezone.useDaylightTime() && mytimezone.inDaylightTime(new Date())) {
+          dstSavings = mytimezone.getDSTSavings()
+		}
+		//To refresh the time
+		long secFrom2000 = (((now().toBigInteger() + mytimezone.rawOffset + dstSavings ) / 1000) - (10957 * 24 * 3600)).toLong() //number of second from 2000-01-01 00:00:00h
 		long secIndian = zigbee.convertHexToInt(swapEndianHex(hex(secFrom2000).toString())) //switch endianess
-		traceEvent(settings.logFilter, "refreshTime>myTime = ${secFrom2000}  reversed = ${secIndian}", settings.trace)
-		cmds += zigbee.writeAttribute(0xFF01, 0x0020, 0x23, secIndian, [mfgCode: 0x119C])   
+		cmds += zigbee.writeAttribute(0xFF01, 0x0020, 0x23, secIndian, [mfgCode: 0x119C])
         
         if(BacklightAutoDimParam == "On Demand"){ 	//Backlight when needed
             traceEvent(settings.logFilter,"Backlight on press",settings.trace)
